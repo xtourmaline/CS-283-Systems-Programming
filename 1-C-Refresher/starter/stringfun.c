@@ -14,6 +14,8 @@ int  setup_buff(char *, char *, int);
 //prototypes for functions to handle required functionality
 int  count_words(char *, int , int);
 void reverse(char*, int, int);
+void word_print(char*, int, int);
+void replace(char*, int, int, char*, char*);
 //add additional prototypes here
 
 int setup_buff(char *buff, char *user_str, int len){
@@ -75,7 +77,7 @@ void usage(char *exename){
 
 }
 
-int count_words(char *buff, int len, int str_len){
+int count_words(char *buff, int, int str_len){
     int count = 1;
 
     for (int i = 0; i < str_len; ++i) {// counts up every time we see a space
@@ -87,7 +89,7 @@ int count_words(char *buff, int len, int str_len){
     return count;
 }
 
-void reverse(char* buff, int len, int str_len) {
+void reverse(char* buff, int, int str_len) {
     char temp;
 
     for (int i = 0; i < (str_len / 2); ++i) { // swaps the element at beginning and end and moved in 1 by 1 till it gets to the middle
@@ -97,7 +99,7 @@ void reverse(char* buff, int len, int str_len) {
     }
 }
 
-void word_print(char* buff, int len, int str_len) {
+void word_print(char* buff, int, int str_len) {
     printf("Word Print\n");
     printf("----------\n");
 
@@ -356,7 +358,7 @@ int main(int argc, char *argv[]){
 
     //TODO:  #3 Allocate space for the buffer using malloc and
     //          handle error if malloc fails by exiting with a 
-    //          return code of 99
+    //          return code of 2, as per requirements.
     // CODE GOES HERE FOR #3
     buff = malloc(sizeof(char)*BUFFER_SZ);
 
@@ -415,6 +417,6 @@ int main(int argc, char *argv[]){
 //  
 //          In general, it's always good to pass both the size of a memory buffer
 //          when passing the buffer. This is to help prevent buffer overflows
-//          or segmentation faults. While in this particular code we didn't necessarily
-//          need it, it can be useful to provide a concept of modularity, where our functions
-//          aren't directly dependent on any values outside of their own context (parameters + local vars).
+//          or segmentation faults. It can be useful to provide a concept of modularity,
+//          where our functions aren't directly dependent on any values outside of their
+//          own context (parameters + local vars).
