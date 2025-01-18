@@ -129,6 +129,98 @@ void word_print(char* buff, int len, int str_len) {
     printf("Number of words returned: %d\n", count);
 }
 
+void replace(char* buff, int len, int str_len, char* prev, char* next) {
+    bool matching = false; // if we are currently processing a possible match
+
+    // helpful information about the substring 'prev' in the buffer
+    int begin = -1, end = -1;
+    int length = 0;
+
+    for (int i = 0; i < str_len; ++i) {
+        if (!matching) {
+            if (*prev == *(buff + i)) {
+                matching = true;
+                begin = i;
+                ++length;
+            }
+        }
+        else {
+            if (*(prev + length) == *(buff + i)) {
+                ++length;
+                // check ahead for if we've finished searching for our match.
+                // this handles the corner case of 'prev' being at the end of
+                // the string, which would normally force the loop to end prematurely
+                if (*(prev + length) == '\0') {
+                    end = i;
+                    break;
+                }
+            }
+            // if our matching failed midway, we completely reset and disregard all old info
+            else {
+                begin = -1;
+                end = -1;
+                length = 0;
+
+                matching = false;
+            }
+        }
+    }
+
+    // these length variables are later used to cut off the excess
+    int left_length = begin; // from 0 to head of match
+    int right_length = str_len - (end + 1); // from str_len to tail of match, +1 to match past the last char
+    int next_length = 0;
+
+    for (char *c = next; *c != '\0'; ++c) {
+        ++next_length;
+    }
+
+    // variables to hold the left and right sides of the buffer
+    // after excluding the 'prev' substring. we use these to join
+    // the strings again in the buffer.
+    char* left = malloc(sizeof(char) * len);
+    char* right = malloc(sizeof(char) * len);
+
+    if (left == NULL || right == NULL) {
+        printf("error: failed to replace() (substring malloc failure)\n");
+        exit(-2);
+    }
+
+    // copy everything from before the substring match, and after it
+    //
+    // e.g. for "hello foo bar", assuming a match on foo:
+    // left => "hello "
+    // right => " bar"
+    memcpy(left, buff, left_length);
+    memcpy(right, buff + end + 1, right_length);
+    
+    // clear out the entire buffer to dots
+    memset(buff, '.', len);
+
+    // clamp values to ensure they always stay below 50.
+    // we do not perform this on left_length, since it
+    // already fit in the buffer once.
+    //
+    // e.g. for a replacement where left_length = 49, next_length = 4, right_length = 10,
+    // this would effectively clamp next_length = 1, and subsequently clamp right_length = 0.
+    if (left_length + next_length > len) {
+        next_length -= (left_length + next_length) - len;
+    }
+    if (left_length + next_length + right_length > len) {
+        right_length -= (left_length + next_length + right_length) - len;
+    }
+
+    memcpy(buff, left, left_length);
+    memcpy(buff + left_length, next, next_length);
+    memcpy(buff + left_length + next_length, right, right_length);
+
+    //printf("'%s' '%s'\n", left, right);
+
+    free(left);
+    free(right);
+}
+
+/*
 void replace(char* buff, int len, int str_len, char* word, char* newWord) {
     int newWordLen = 0;
     int wordLen = 0;
@@ -137,7 +229,6 @@ void replace(char* buff, int len, int str_len, char* word, char* newWord) {
     int matchStart = -1;
 
     int diff = 0;
-
 
     for (int i = 0; newWord[i] != '\0'; ++i) {
         newWordLen++;
@@ -225,7 +316,7 @@ void replace(char* buff, int len, int str_len, char* word, char* newWord) {
         }
     }
 }
-
+*/
 
 //ADD OTHER HELPER FUNCTIONS HERE FOR OTHER REQUIRED PROGRAM OPTIONS
 
