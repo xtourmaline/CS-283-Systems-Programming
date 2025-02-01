@@ -5,7 +5,7 @@ Please answer the following questions and submit in your repo for the second ass
 
 1. In this assignment I asked you provide an implementation for the `get_student(...)` function because I think it improves the overall design of the database application.   After you implemented your solution do you agree that externalizing `get_student(...)` into it's own function is a good design strategy?  Briefly describe why or why not.
 
-    > **Answer**:  _start here_
+    > **Answer** I think it overall improves the design of the database application because in multiple instances of our code, it is important to be able to get a student and we get to reuse that code because we have a function. Additionally, the get_student function allows for error checking to check if the student even exists so when you run the function in a different area, you can be confident that the student exists and doesn't need to error check.
 
 2. Another interesting aspect of the `get_student(...)` function is how its function prototype requires the caller to provide the storage for the `student_t` structure:
 
@@ -39,7 +39,7 @@ Please answer the following questions and submit in your repo for the second ass
     ```
     Can you think of any reason why the above implementation would be a **very bad idea** using the C programming language?  Specifically, address why the above code introduces a subtle bug that could be hard to identify at runtime? 
 
-    > **ANSWER:** _start here_
+    > **ANSWER:** The implementation would be a very bad idea using C programming language because once student memory location is return to the main function and the get_student function finishes running, the data at the student variable will be deallocated. This is a subtle bug because it is syntactically correct and would still give the memory location of where student was. 
 
 3. Another way the `get_student(...)` function could be implemented is as follows:
 
@@ -70,10 +70,9 @@ Please answer the following questions and submit in your repo for the second ass
         }
     }
     ```
-    In this implementation the storage for the student record is allocated on the heap using `malloc()` and passed back to the caller when the function returns. What do you think about this alternative implementation of `get_student(...)`?  Address in your answer why it work work, but also think about any potential problems it could cause.  
+    In this implementation the storage for the student record is allocated on the heap using `malloc()` and passed back to the caller when the function returns. What do you think about this alternative implementation of `get_student(...)`?  Address in your answer why it would work, but also think about any potential problems it could cause.  
     
-    > **ANSWER:** _start here_  
-
+    > **ANSWER:** This implementation would work because because it is allocating the memory and then returning the address. This would work because memory allocation using malloc doesn't deallocate until its been freed that means that the pointer address returned is always valid. The problems with this implementation is that you would have to remember to deallocate the memory when you finish using it and you can't reuse pointers so it will create a new allocation every time it's used.
 
 4. Lets take a look at how storage is managed for our simple database. Recall that all student records are stored on disk using the layout of the `student_t` structure (which has a size of 64 bytes).  Lets start with a fresh database by deleting the `student.db` file using the command `rm ./student.db`.  Now that we have an empty database lets add a few students and see what is happening under the covers.  Consider the following sequence of commands:
 
@@ -102,11 +101,11 @@ Please answer the following questions and submit in your repo for the second ass
 
     - Please explain why the file size reported by the `ls` command was 128 bytes after adding student with ID=1, 256 after adding student with ID=3, and 4160 after adding the student with ID=64? 
 
-        > **ANSWER:** _start here_
+        > **ANSWER:** It is reporting where the end of the file is respect to the start. For example for ID = 64, we would multiply 64 by the size of student to get the offset and since we know that size of student is 64, we know that it is 64 times 64 which is 4096. Then, we have to write 64 bytes which would give you 4160 and that's what ls reports.
 
-    -   Why did the total storage used on the disk remain unchanged when we added the student with ID=1, ID=3, and ID=63, but increased from 4K to 8K when we added the student with ID=64? 
+    - Why did the total storage used on the disk remain unchanged when we added the student with ID=1, ID=3, and ID=63, but increased from 4K to 8K when we added the student with ID=64?
 
-        > **ANSWER:** _start here_
+        > **ANSWER:** There was an increase from 4k to 8k because files are stored in blocks so when we wrote down the student with id 64, it fell over to the next block.
 
     - Now lets add one more student with a large student ID number  and see what happens:
 
@@ -119,4 +118,4 @@ Please answer the following questions and submit in your repo for the second ass
         ```
         We see from above adding a student with a very large student ID (ID=99999) increased the file size to 6400000 as shown by `ls` but the raw storage only increased to 12K as reported by `du`.  Can provide some insight into why this happened?
 
-        > **ANSWER:**  _start here_
+        > **ANSWER:** This happens because Linux is smart enough to realize there would be a bunch of empty space between the two blocks so it would just allocate memory to the next available block which would be the third block in this situation.
