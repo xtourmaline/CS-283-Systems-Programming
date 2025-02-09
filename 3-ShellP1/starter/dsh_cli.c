@@ -86,7 +86,7 @@ const char *DRAGON =
  */
 int main()
 {
-    char cmd_buff[SH_CMD_MAX];
+    char *cmd_buff = malloc(sizeof(char) * SH_CMD_MAX);
     int rc = 0;
     command_list_t clist;
 
@@ -127,11 +127,13 @@ int main()
                 printf("<%d> %s", i + 1, clist.commands[i].exe);
 
                 if (strnlen(clist.commands[i].args, ARG_MAX) != 0) {
-                    printf("[%s]", clist.commands[i].args);
+                    printf(" [%s]", clist.commands[i].args);
                 }
 
                 printf("\n");
             }
         }
     }
+
+    free(cmd_buff);
 }

@@ -68,6 +68,8 @@ int build_cmd_list(char *cmd_line, command_list_t *clist)
         strncpy(clist->commands[i].exe, temp, exeLen);
         strncpy(clist->commands[i].args, spaceChar, argsLen);
 
+        trim(clist->commands[i].args, argsLen);
+
         clist->num += 1;
 
         i++;
