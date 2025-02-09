@@ -34,7 +34,50 @@
  */
 int build_cmd_list(char *cmd_line, command_list_t *clist)
 {
-    printf(M_NOT_IMPL);
+    char *temp;
+    int first = 0;
+    int i = 0;
+
+    while (1) {
+        if (first == 0) {
+            temp = strtok(cmd_line, PIPE_STRING);
+            first = 1;
+        } else {
+            temp = strtok(NULL, PIPE_STRING);
+        }
+
+        if (temp == NULL) {
+            return OK;
+        }
+
+        if (clist->num == CMD_MAX) {
+            return ERR_TOO_MANY_COMMANDS;
+        }
+
+        trim(temp, SH_CMD_MAX);
+
+        char *spaceChar = strchrnul(temp, SPACE_CHAR);
+
+        int exeLen = spaceChar - temp;
+        spaceChar += 1;
+        int argsLen = strnlen(spaceChar, ARG_MAX);
+
+        if (exeLen >= EXE_MAX || argsLen >= ARG_MAX) {
+            return ERR_CMD_OR_ARGS_TOO_BIG;
+        }
+
+        strncpy(clist->commands[i].exe, temp, spaceChar - temp);
+        strncpy(clist->commands[i].args, spaceChar, strnlen(spaceChar, ARG_MAX));
+
+        trim(clist->commands[i].exe, EXE_MAX);
+        trim(clist->commands[i].args, ARG_MAX);
+
+        clist->num += 1;
+
+        i++;
+    }
+
+
     return EXIT_NOT_IMPL;
 }
 
