@@ -59,10 +59,12 @@ int main()
             break;
         }
         // remove the trailing \n from cmd_buff
-        cmd_buff[strcspn(cmd_buff, "\n")] = '\0';    
+        cmd_buff[strcspn(cmd_buff, "\n")] = '\0';
+
+        trim(cmd_buff, ARG_MAX);
 
         // IMPLEMENT THE REST OF THE REQUIREMENTS
-        if (strlen(cmd_buff) == 4 && strncmp(EXIT_CMD, cmd_buff, 4) == 0) {
+        if (strnlen(cmd_buff, ARG_MAX) == 4 && strncmp(EXIT_CMD, cmd_buff, 4) == 0) {
             exit(0);
         }
     }

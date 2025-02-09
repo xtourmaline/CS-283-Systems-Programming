@@ -37,3 +37,36 @@ int build_cmd_list(char *cmd_line, command_list_t *clist)
     printf(M_NOT_IMPL);
     return EXIT_NOT_IMPL;
 }
+
+void trim(char *cmd_line, int cmd_size) {
+    int endCmd;
+    int foundFirst = 0;
+    int newStartCmd = 0;
+    int cmdLineLen = strnlen(cmd_line, cmd_size) - 1;
+
+    if (cmdLineLen == 0) {
+        return;
+    }
+    
+    for (int i = cmdLineLen; i > 0; i--) {
+        if (cmd_line[i] != SPACE_CHAR) {
+            endCmd = i;
+            break;
+        }
+    }
+
+    for (int i = 0; i <= endCmd; i++) {
+        if (cmd_line[i] != SPACE_CHAR && foundFirst == 0) {
+            foundFirst = 1;
+        }
+
+        if (foundFirst == 1) {
+            cmd_line[newStartCmd] = cmd_line[i];
+            newStartCmd++;
+        }
+    }
+
+    cmd_line[newStartCmd] = '\0';
+}
+
+ 
