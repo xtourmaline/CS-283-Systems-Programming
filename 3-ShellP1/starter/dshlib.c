@@ -59,18 +59,14 @@ int build_cmd_list(char *cmd_line, command_list_t *clist)
         char *spaceChar = strchrnul(temp, SPACE_CHAR);
 
         int exeLen = spaceChar - temp;
-        spaceChar += 1;
         int argsLen = strnlen(spaceChar, ARG_MAX);
 
         if (exeLen >= EXE_MAX || argsLen >= ARG_MAX) {
             return ERR_CMD_OR_ARGS_TOO_BIG;
         }
 
-        strncpy(clist->commands[i].exe, temp, spaceChar - temp);
-        strncpy(clist->commands[i].args, spaceChar, strnlen(spaceChar, ARG_MAX));
-
-        trim(clist->commands[i].exe, EXE_MAX);
-        trim(clist->commands[i].args, ARG_MAX);
+        strncpy(clist->commands[i].exe, temp, exeLen);
+        strncpy(clist->commands[i].args, spaceChar, argsLen);
 
         clist->num += 1;
 
