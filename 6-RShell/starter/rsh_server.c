@@ -10,8 +10,8 @@
 #include <fcntl.h>
 
 //INCLUDES for extra credit
-//#include <signal.h>
-//#include <pthread.h>
+#include <signal.h>
+#include <pthread.h>
 //-------------------------
 
 #include "dshlib.h"
@@ -62,7 +62,7 @@ int start_server(char *ifaces, int port, int is_threaded){
         return err_code;
     }
 
-    rc = process_cli_requests(svr_socket);
+    rc = process_cli_requests(svr_socket, is_threaded);
 
     stop_server(svr_socket);
 
@@ -157,6 +157,22 @@ int boot_server(char *ifaces, int port) {
     return svr_socket;
 }
 
+void *process_cli(void *cli_socket) {
+    if (pthread_detach(pthread_self()) != 0) {
+        pthread_exit(NULL);
+    }
+
+    int socket = (int) (long) cli_socket;
+    int rc = exec_client_requests(socket);
+    stop_server(socket);
+
+    if (rc == OK_EXIT) {
+        exit(0);
+    }
+
+    return NULL;
+}
+
 /*
  * process_cli_requests(svr_socket)
  *      svr_socket:  The server socket that was obtained from boot_server()
@@ -198,7 +214,7 @@ int boot_server(char *ifaces, int port) {
  *                connections, and negative values terminate the server. 
  * 
  */
-int process_cli_requests(int svr_socket){
+int process_cli_requests(int svr_socket, int is_threaded) {
     int     cli_socket;
     int     rc = OK;
 
@@ -211,11 +227,20 @@ int process_cli_requests(int svr_socket){
             return ERR_RDSH_COMMUNICATION;
         }
 
-        rc = exec_client_requests(cli_socket);
-        stop_server(cli_socket);
+        if (is_threaded) {
+            pthread_t tid;
+            if (pthread_create(&tid, NULL, &process_cli, (void*) (long) cli_socket) != 0) {
+                stop_server(cli_socket);
+                return ERR_RDSH_SERVER;
+            }
+        }
+        else {
+            int rc = exec_client_requests(cli_socket);
+            stop_server(cli_socket);
 
-        if (rc != OK) {
-            break;
+            if (rc != OK) {
+                break;
+            }
         }
     }
 
@@ -269,25 +294,19 @@ int exec_client_requests(int cli_socket) {
     int rc;
     int cmd_rc;
     int last_rc;
-    char *io_buff;
     int ret;
 
-    io_buff = malloc(RDSH_COMM_BUFF_SZ);
-    if (io_buff == NULL) {
-        return ERR_RDSH_SERVER;
-    }
+    char io_buff[RDSH_COMM_BUFF_SZ] = {0};
 
     while (1) {
         // TODO use recv() syscall to get input
         while (1) {
             ret = recv(cli_socket, io_buff + io_size, RDSH_COMM_BUFF_SZ, 0);
             if (ret == -1) {
-                free(io_buff);
                 return ERR_RDSH_COMMUNICATION;
             }
             
             if (ret == 0) {
-                free(io_buff);
                 return ERR_RDSH_COMMUNICATION;
             }
 
@@ -304,13 +323,15 @@ int exec_client_requests(int cli_socket) {
             Built_In_Cmds cmd = rsh_built_in_cmd(&cmd_list.commands[0]);
             switch (cmd) {
                 case BI_CMD_EXIT:
-                    free(io_buff);
+                    for (int i = 0; i < cmd_list.num; ++i)
+                        clear_cmd_buff(&cmd_list.commands[i]);
                     if (send_message_string(cli_socket, RCMD_MSG_CLIENT_EXITED) != OK) {
                         return ERR_RDSH_COMMUNICATION;
                     }
                     return OK;
                 case BI_CMD_STOP_SVR:
-                    free(io_buff);
+                    for (int i = 0; i < cmd_list.num; ++i)
+                        clear_cmd_buff(&cmd_list.commands[i]);
                     if (send_message_string(cli_socket, RCMD_MSG_SVR_STOP_REQ) != OK) {
                         return ERR_RDSH_COMMUNICATION;
                     }
@@ -329,13 +350,12 @@ int exec_client_requests(int cli_socket) {
             char rsp_buff[RDSH_COMM_BUFF_SZ] = {0};
             snprintf(rsp_buff, RDSH_COMM_BUFF_SZ, RCMD_MSG_SVR_RC_CMD, ret);
 
-            if (send_message_string(cli_socket, rsp_buff) != OK) {
-                free(io_buff);
-                return ERR_RDSH_COMMUNICATION;
-            }
-
             for (int i = 0; i < cmd_list.num; ++i)
                 clear_cmd_buff(&cmd_list.commands[i]);
+
+            if (send_message_string(cli_socket, rsp_buff) != OK) {
+                return ERR_RDSH_COMMUNICATION;
+            }
 
             cmd_list.num = 0;
 
@@ -349,7 +369,8 @@ int exec_client_requests(int cli_socket) {
         // - etc.
         if (ret != OK) {
             if (send_message_string(cli_socket, CMD_ERR_RDSH_EXEC) != OK) {
-                free(io_buff);
+                for (int i = 0; i < cmd_list.num; ++i)
+                    clear_cmd_buff(&cmd_list.commands[i]);
                 return ERR_RDSH_COMMUNICATION;
             }
         }
@@ -357,7 +378,6 @@ int exec_client_requests(int cli_socket) {
         send_message_eof(cli_socket);
     }
 
-    free(io_buff);
     return OK;
 }
 

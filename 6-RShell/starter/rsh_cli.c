@@ -153,8 +153,8 @@ int exec_remote_cmd_loop(char *address, int port)
                 return client_cleanup(cli_socket, cmd_buff, rsp_buff, ERR_RDSH_COMMUNICATION);
             }
 
-            if (ret == 0 || (rsp_buff + io_size)[ret - 1] == RDSH_EOF_CHAR) {
-                *(rsp_buff + io_size) = '\0';
+            if ((rsp_buff + io_size)[ret - 1] == RDSH_EOF_CHAR) {
+                (rsp_buff + io_size)[ret - 1] = '\0';
                 break;
             }
 

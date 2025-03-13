@@ -63,7 +63,7 @@ int boot_server(char *ifaces, int port);
 int stop_server(int svr_socket);
 int send_message_eof(int cli_socket);
 int send_message_string(int cli_socket, char *buff);
-int process_cli_requests(int svr_socket);
+int process_cli_requests(int svr_socket, int is_threaded);
 int exec_client_requests(int cli_socket);
 int rsh_execute_pipeline(int socket_fd, command_list_t *clist);
 
